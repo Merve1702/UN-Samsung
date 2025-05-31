@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8" />
+    <title>Erişilebilir Mekanlar Haritası</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map { height: 600px; width: 100%; }
+    </style>
+</head>
+<body>
+    <h2>♿ Erişilebilir Mekanlar Haritası</h2>
+    <div id="map"></div>
+
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+        const map = L.map('map').setView([39.92, 32.85], 13);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+        }).addTo(map);
+
+        function addMarker(place, color = "blue") {
+            L.circleMarker([place.lat, place.lon], {
+                radius: 8,
+                color: color,
+                fillOpacity: 0.8
+            }).bindPopup(`<b>${place.name}</b><br>${place.address ? place.address + '<br>' : ''}Erişilebilir: ${place.accessible ? '✅ Evet' : '❌ Hayır'}`).addTo(map);
+        }
+
+        // Kullanıcı yerleri (yeşil)
+        fetch("/api/user_places")
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(place => addMarker(place, "green"));
+            });
+
+        // OpenStreetMap Overpass API yerleri (kırmızı)
+        fetch("/api/public_places")
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(place => addMarker(place, "red"));
+            });
+
+        // Google Places API yerleri (mavi)
+        // İstanbul (39.92, 32.85) koordinatlarını isteğe göre değiştir
+        fetch("/api/google_places?lat=39.92&lon=32.85&radius=5000")
+            .then(res => res.json())
+            .then(data => {
+                data.forEach(place => addMarker(place, "blue"));
+            });
+    </script>
+</body>
+</html>
